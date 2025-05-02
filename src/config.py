@@ -9,12 +9,89 @@ DATA_DIR = BASE_DIR / "data"
 OUTPUT_DIR = BASE_DIR / "output"
 LOG_DIR = BASE_DIR / "logs"
 
+# Configurações de logging
+LOGGING_CONFIG = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s - %(levelname)s - %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+            'level': 'INFO'
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'formatter': 'standard',
+            'filename': 'converter.log',
+            'level': 'DEBUG'
+        }
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True
+        }
+    }
+}
+
 # Configurações do conversor
-CONVERTER_CONFIG: Dict[str, Any] = {
-    "sample_rate": 1000,  # Hz
-    "voltage_scale": 0.001,  # mV
-    "header_size": 1024,  # bytes
-    "annotation_size": 1024,  # bytes
+CONVERTER_CONFIG = {
+    'default_sample_rate': 128,  # Hz
+    'ecg_sample_rate': 500,      # Hz
+    'holter_sample_rate': 128,   # Hz
+    'min_duration_holter': 3600, # segundos
+    'normalization': {
+        'method': 'zscore',      # zscore ou minmax
+        'clip': True,            # Limita valores extremos
+        'clip_range': (-3, 3)    # Range para clipping
+    },
+    'peak_detection': {
+        'height': 2.0,           # Múltiplos do desvio padrão
+        'distance': 0.5,         # segundos
+        'prominence': 1.0,       # Múltiplos do desvio padrão
+        'width': 0.1            # segundos
+    }
+}
+
+# Configurações de visualização
+VISUALIZATION_CONFIG = {
+    'plot': {
+        'style': 'seaborn',      # Estilo do matplotlib
+        'figsize': (15, 8),      # Tamanho da figura
+        'dpi': 100,              # Resolução
+        'linewidth': 0.5,        # Espessura da linha
+        'alpha': 0.7             # Transparência
+    },
+    'signal': {
+        'color': 'b',            # Cor do sinal
+        'label': 'ECG',          # Rótulo
+        'grid': True             # Grade
+    },
+    'peaks': {
+        'color': 'r',            # Cor dos picos
+        'marker': 'o',           # Marcador
+        'size': 4                # Tamanho
+    },
+    'heart_rate': {
+        'window': 60,            # Janela de suavização
+        'color': 'b',            # Cor
+        'grid': True             # Grade
+    }
+}
+
+# Configurações de saída
+OUTPUT_CONFIG = {
+    'format': 'wfdb',           # Formato de saída
+    'compression': False,       # Comprime arquivos
+    'metadata': True,          # Salva metadados
+    'annotations': True,       # Salva anotações
+    'quality': True           # Salva informações de qualidade
 }
 
 # Configurações do analisador
