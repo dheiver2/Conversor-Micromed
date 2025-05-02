@@ -1,4 +1,9 @@
 import os
+import sys
+
+# Adiciona o diretório raiz ao PYTHONPATH
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from src.converters.holter_converter import HolterConverter, FileType
 
 def main():
