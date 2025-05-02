@@ -1,60 +1,59 @@
-# Conversor e Analisador de Holter
+# Conversor Inteligente de Holter para WFDB
 
-Um conjunto avançado de ferramentas para análise e conversão de arquivos de Holter para o formato WFDB.
+Um conversor inteligente que analisa arquivos BIN de Holter e gera automaticamente os arquivos WFDB necessários, adaptando-se às características específicas de cada arquivo.
 
-## 🚀 Visão Geral
+## 🚀 Características Principais
 
-Este projeto fornece uma solução completa para:
-- Conversão inteligente de arquivos BIN de Holter para formato WFDB
-- Análise detalhada de sinais de ECG
-- Detecção de arritmias
-- Visualização de dados
-- Geração de relatórios
+- **Conversão Inteligente**: Analisa automaticamente o arquivo de entrada e gera apenas os arquivos WFDB necessários
+- **Detecção Automática**:
+  - Anotações ECG
+  - Arritmias
+  - Qualidade do sinal
+  - Taxa de amostragem
+  - Timestamps
+- **Arquivos WFDB Gerados**:
+  - `.hea`: Cabeçalho com metadados
+  - `.dat`: Dados do sinal ECG
+  - `.atr`: Anotações (quando presentes)
+  - `.ari`: Informações de arritmia (quando presentes)
+  - `.qrs`: Informações de qualidade (quando presentes)
 
 ## 📁 Estrutura do Projeto
 
 ```
 Conversor-Micromed/
-├── src/                    # Código fonte
-│   ├── converters/         # Conversores para diferentes formatos
+├── src/
+│   ├── converters/
 │   │   └── holter_converter.py  # Conversor principal
-│   ├── analyzers/          # Analisadores de ECG
-│   │   └── ecg_analyzer.py # Analisador de sinais
-│   ├── utils/              # Utilitários
-│   │   └── logger.py       # Configuração de logging
-│   └── config.py           # Configurações do projeto
-├── tests/                  # Testes unitários
-├── examples/               # Exemplos de uso
-│   └── intelligent_converter.py
-├── archive/                # Arquivos de entrada
-├── output/                 # Arquivos gerados
-├── requirements.txt        # Dependências
-└── README.md              # Documentação
+│   ├── utils/
+│   │   └── logger.py           # Utilitários de logging
+│   └── config.py               # Configurações do projeto
+├── tests/
+│   └── test_converter.py       # Testes unitários
+├── examples/
+│   ├── intelligent_converter.py # Exemplo de uso
+│   └── test_intelligent_conversion.py # Teste de conversão
+├── archive/                    # Arquivos BIN de entrada
+├── output/                     # Arquivos WFDB gerados
+└── requirements.txt            # Dependências
 ```
 
 ## 📋 Requisitos
 
-- Python 3.8 ou superior
-- Bibliotecas listadas em `requirements.txt`:
+- Python 3.8+
+- Bibliotecas:
   - numpy>=1.21.0
   - scipy>=1.7.0
+  - wfdb>=4.0.0
   - matplotlib>=3.4.0
-  - wfdb>=3.4.0
   - pandas>=1.3.0
   - scikit-learn>=0.24.0
-  - tqdm>=4.62.0
-  - pytest>=6.2.0
-  - pytest-cov>=2.12.0
-  - black>=21.5b2
-  - flake8>=3.9.0
-  - mypy>=0.910
-  - python-dotenv>=0.19.0
 
 ## 🔧 Instalação
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/dheiver2/Conversor-Micromed.git
+git clone https://github.com/seu-usuario/Conversor-Micromed.git
 cd Conversor-Micromed
 ```
 
@@ -65,10 +64,19 @@ pip install -r requirements.txt
 
 ## 💻 Uso
 
-### Conversor Inteligente
+### Conversão Básica
+```python
+from src.converters.holter_converter import HolterConverter
 
-O conversor inteligente analisa automaticamente o arquivo de entrada e gera apenas os arquivos necessários:
+# Inicializa o conversor
+converter = HolterConverter("arquivo.bin")
 
+# Analisa e converte
+converter.analyze_file_structure()
+converter.convert_to_wfdb("output")
+```
+
+### Conversão Inteligente
 ```python
 from src.converters.holter_converter import HolterConverter
 
@@ -78,110 +86,75 @@ converter = HolterConverter("arquivo.bin")
 # Analisa o arquivo
 converter.analyze_file_structure()
 
+# Mostra quais arquivos serão gerados
+print("Arquivos que serão gerados:")
+for file_type in converter.required_files:
+    print(f"- {file_type.name}")
+
 # Converte para WFDB
 converter.convert_to_wfdb("output")
 ```
 
-O conversor detecta automaticamente:
-- Taxa de amostragem (com validação)
-- Timestamp de início
-- Presença de anotações
-- Informações de arritmia
-- Dados de qualidade
-
 ## 📊 Arquivos Gerados
 
-O conversor gera automaticamente os seguintes arquivos, dependendo do conteúdo do arquivo de entrada:
+O conversor gera automaticamente os seguintes arquivos WFDB, dependendo das características do arquivo de entrada:
 
-1. **Arquivos Básicos** (sempre gerados):
-   - `.hea`: Cabeçalho WFDB com metadados
-   - `.dat`: Dados do ECG
+1. **Arquivos Obrigatórios**:
+   - `.hea`: Cabeçalho com metadados do sinal
+   - `.dat`: Dados do sinal ECG
 
-2. **Arquivos de Anotação** (gerados se presentes):
-   - `.atr`: Anotações de batimentos
+2. **Arquivos Opcionais** (gerados quando presentes):
+   - `.atr`: Anotações do ECG
    - `.ari`: Informações de arritmia
-   - `.qrs`: Dados de qualidade do sinal
+   - `.qrs`: Informações de qualidade do sinal
 
-## 🔍 Detecção de Características
+## 🔍 Detecção Inteligente
 
 O conversor analisa automaticamente:
 
 1. **Anotações**:
    - Detecta padrões nos últimos 1024 bytes
-   - Identifica tipos de batimentos
-   - Extrai timestamps
+   - Extrai posição e tipo de cada anotação
+   - Gera arquivo `.atr` quando encontradas
 
 2. **Arritmias**:
-   - Procura por códigos específicos
-   - Classifica eventos
-   - Calcula durações
+   - Procura por códigos específicos no cabeçalho
+   - Identifica tipo e severidade
+   - Gera arquivo `.ari` quando encontradas
 
-3. **Qualidade do Sinal**:
-   - Analisa SNR (Relação Sinal-Ruído)
-   - Detecta saturação
-   - Identifica artefatos
+3. **Qualidade**:
+   - Verifica flags de qualidade no cabeçalho
+   - Avalia integridade dos dados
+   - Gera arquivo `.qrs` com informações de qualidade
 
-## 📈 Análise de HRV
+## 📈 Análise de Dados
 
-O analisador calcula:
+O conversor extrai e processa:
 
-1. **Métricas no Domínio do Tempo**:
-   - SDNN
-   - RMSSD
-   - pNN50
-
-2. **Métricas no Domínio da Frequência**:
-   - Potência VLF
-   - Potência LF
-   - Potência HF
-   - Razão LF/HF
-
-## 🎯 Detecção de Arritmias
-
-O sistema detecta automaticamente:
-
-1. **Taquicardia**:
-   - Frequência > 100 bpm
-   - Classificação de severidade
-
-2. **Bradicardia**:
-   - Frequência < 60 bpm
-   - Classificação de severidade
-
-3. **Pausas Sinusais**:
-   - Duração > 2 segundos
-   - Classificação de severidade
-
-## 📝 Relatórios
-
-O sistema gera relatórios detalhados incluindo:
-
-1. **Metadados do Arquivo**:
+1. **Metadados**:
    - Taxa de amostragem
-   - Duração
-   - Data/hora de início
+   - Timestamp inicial
+   - Duração do registro
    - Número de amostras
    - Tamanho do arquivo
 
-2. **Resultados da Análise**:
-   - Métricas de HRV
-   - Eventos de arritmia
+2. **Estatísticas**:
+   - Número de anotações
+   - Número de arritmias
    - Qualidade do sinal
-
-3. **Visualizações**:
-   - Gráficos de ECG
-   - Tachogramas
-   - Histogramas de RR
+   - Presença de artefatos
 
 ## 🤝 Contribuição
 
-1. Faça um fork do projeto
+Contribuições são bem-vindas! Por favor, siga estas etapas:
+
+1. Fork o projeto
 2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
 3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
-## 📄 Licença
+## 📝 Licença
 
 Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
