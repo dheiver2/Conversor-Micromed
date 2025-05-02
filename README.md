@@ -14,34 +14,48 @@ Este projeto fornece uma solução completa para:
 ## 📁 Estrutura do Projeto
 
 ```
-holter-analyzer/
+Conversor-Micromed/
 ├── src/                    # Código fonte
 │   ├── converters/         # Conversores para diferentes formatos
 │   │   └── holter_converter.py  # Conversor principal
 │   ├── analyzers/          # Analisadores de ECG
 │   │   └── ecg_analyzer.py # Analisador de sinais
 │   ├── utils/              # Utilitários
-│   └── visualization/      # Visualização de dados
-│       └── ecg_plotter.py  # Visualizador de ECG
+│   │   └── logger.py       # Configuração de logging
+│   └── config.py           # Configurações do projeto
 ├── tests/                  # Testes unitários
 ├── examples/               # Exemplos de uso
-│   ├── convert_and_analyze.py
 │   └── intelligent_converter.py
-├── docs/                   # Documentação
-└── data/                   # Dados de exemplo
+├── archive/                # Arquivos de entrada
+├── output/                 # Arquivos gerados
+├── requirements.txt        # Dependências
+└── README.md              # Documentação
 ```
 
 ## 📋 Requisitos
 
 - Python 3.8 ou superior
-- Bibliotecas listadas em `requirements.txt`
+- Bibliotecas listadas em `requirements.txt`:
+  - numpy>=1.21.0
+  - scipy>=1.7.0
+  - matplotlib>=3.4.0
+  - wfdb>=3.4.0
+  - pandas>=1.3.0
+  - scikit-learn>=0.24.0
+  - tqdm>=4.62.0
+  - pytest>=6.2.0
+  - pytest-cov>=2.12.0
+  - black>=21.5b2
+  - flake8>=3.9.0
+  - mypy>=0.910
+  - python-dotenv>=0.19.0
 
 ## 🔧 Instalação
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/holter-analyzer.git
-cd holter-analyzer
+git clone https://github.com/dheiver2/Conversor-Micromed.git
+cd Conversor-Micromed
 ```
 
 2. Instale as dependências:
@@ -51,7 +65,9 @@ pip install -r requirements.txt
 
 ## 💻 Uso
 
-### Conversão de Arquivos
+### Conversor Inteligente
+
+O conversor inteligente analisa automaticamente o arquivo de entrada e gera apenas os arquivos necessários:
 
 ```python
 from src.converters.holter_converter import HolterConverter
@@ -66,35 +82,12 @@ converter.analyze_file_structure()
 converter.convert_to_wfdb("output")
 ```
 
-### Análise de ECG
-
-```python
-from src.analyzers.ecg_analyzer import ECGAnalyzer
-
-# Inicializa o analisador
-analyzer = ECGAnalyzer("arquivo.wfdb")
-
-# Realiza análise completa
-results = analyzer.analyze()
-
-# Acessa resultados
-print(f"HRV: {results['hrv_metrics']}")
-print(f"Arritmias: {results['arrhythmias']}")
-```
-
-### Visualização
-
-```python
-from src.visualization.ecg_plotter import ECGPlotter
-
-# Inicializa o visualizador
-plotter = ECGPlotter("arquivo.wfdb")
-
-# Gera visualizações
-plotter.plot_segment(duration=10)  # Plota 10 segundos
-plotter.plot_hrv()                 # Plota análise de HRV
-plotter.plot_arrhythmias()         # Plota detecção de arritmias
-```
+O conversor detecta automaticamente:
+- Taxa de amostragem (com validação)
+- Timestamp de início
+- Presença de anotações
+- Informações de arritmia
+- Dados de qualidade
 
 ## 📊 Arquivos Gerados
 
@@ -167,6 +160,8 @@ O sistema gera relatórios detalhados incluindo:
    - Taxa de amostragem
    - Duração
    - Data/hora de início
+   - Número de amostras
+   - Tamanho do arquivo
 
 2. **Resultados da Análise**:
    - Métricas de HRV
