@@ -1,60 +1,44 @@
-# Conversor Inteligente de Holter para WFDB
+# Conversor de Holter/ECG
 
-Um conversor inteligente que analisa arquivos BIN de Holter e gera automaticamente os arquivos WFDB necessários, adaptando-se às características específicas de cada arquivo.
+Este projeto converte arquivos de Holter e ECG do formato binário para o formato WFDB e gera visualizações dos dados.
 
-## 🚀 Características Principais
-
-- **Conversão Inteligente**: Analisa automaticamente o arquivo de entrada e gera apenas os arquivos WFDB necessários
-- **Detecção Automática**:
-  - Anotações ECG
-  - Arritmias
-  - Qualidade do sinal
-  - Taxa de amostragem
-  - Timestamps
-- **Arquivos WFDB Gerados**:
-  - `.hea`: Cabeçalho com metadados
-  - `.dat`: Dados do sinal ECG
-  - `.atr`: Anotações (quando presentes)
-  - `.ari`: Informações de arritmia (quando presentes)
-  - `.qrs`: Informações de qualidade (quando presentes)
-
-## 📁 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
-Conversor-Micromed/
+.
 ├── src/
-│   ├── converters/
-│   │   └── holter_converter.py  # Conversor principal
-│   ├── utils/
-│   │   └── logger.py           # Utilitários de logging
-│   └── config.py               # Configurações do projeto
-├── tests/
-│   └── test_converter.py       # Testes unitários
-├── examples/
-│   ├── intelligent_converter.py # Exemplo de uso
-│   └── test_intelligent_conversion.py # Teste de conversão
-├── archive/                    # Arquivos BIN de entrada
-├── output/                     # Arquivos WFDB gerados
-└── requirements.txt            # Dependências
+│   ├── holter_converter.py  # Conversor principal
+│   ├── visualization.py     # Módulo de visualização
+│   └── main.py             # Script principal
+├── output/                 # Arquivos WFDB convertidos
+├── plots/                  # Gráficos gerados
+├── examples/              # Exemplos de uso
+├── tests/                 # Testes unitários
+└── requirements.txt       # Dependências
 ```
 
-## 📋 Requisitos
+## Funcionalidades
+
+- Conversão automática de arquivos binários para formato WFDB
+- Detecção automática do tipo de exame (Holter ou ECG)
+- Geração de visualizações:
+  - Sinal temporal com espectro de frequência
+  - Frequência cardíaca ao longo do tempo
+  - Distribuição da frequência cardíaca
+- Suporte a múltiplos canais
+- Detecção de anotações e eventos
+
+## Requisitos
 
 - Python 3.8+
-- Bibliotecas:
-  - numpy>=1.21.0
-  - scipy>=1.7.0
-  - wfdb>=4.0.0
-  - matplotlib>=3.4.0
-  - pandas>=1.3.0
-  - scikit-learn>=0.24.0
+- Dependências listadas em `requirements.txt`
 
-## 🔧 Instalação
+## Instalação
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/Conversor-Micromed.git
-cd Conversor-Micromed
+git clone https://github.com/seu-usuario/conversor-holter.git
+cd conversor-holter
 ```
 
 2. Instale as dependências:
@@ -62,102 +46,58 @@ cd Conversor-Micromed
 pip install -r requirements.txt
 ```
 
-## 💻 Uso
+## Uso
 
-### Conversão Básica
-```python
-from src.converters.holter_converter import HolterConverter
+### Conversão e Visualização
 
-# Inicializa o conversor
-converter = HolterConverter("arquivo.bin")
-
-# Analisa e converte
-converter.analyze_file_structure()
-converter.convert_to_wfdb("output")
+```bash
+python src/main.py arquivo_entrada.bin [diretorio_saida] [diretorio_plots]
 ```
 
-### Conversão Inteligente
-```python
-from src.converters.holter_converter import HolterConverter
-
-# Inicializa o conversor
-converter = HolterConverter("arquivo.bin")
-
-# Analisa o arquivo
-converter.analyze_file_structure()
-
-# Mostra quais arquivos serão gerados
-print("Arquivos que serão gerados:")
-for file_type in converter.required_files:
-    print(f"- {file_type.name}")
-
-# Converte para WFDB
-converter.convert_to_wfdb("output")
+Exemplo:
+```bash
+python src/main.py examples/arquivo.bin output plots
 ```
 
-## 📊 Arquivos Gerados
+### Visualização de Arquivos WFDB
 
-O conversor gera automaticamente os seguintes arquivos WFDB, dependendo das características do arquivo de entrada:
+```python
+from src.visualization import SignalVisualizer
 
-1. **Arquivos Obrigatórios**:
-   - `.hea`: Cabeçalho com metadados do sinal
-   - `.dat`: Dados do sinal ECG
+# Carrega e visualiza um arquivo WFDB
+visualizer = SignalVisualizer("output/arquivo")
+visualizer.load_data()
 
-2. **Arquivos Opcionais** (gerados quando presentes):
-   - `.atr`: Anotações do ECG
-   - `.ari`: Informações de arritmia
-   - `.qrs`: Informações de qualidade do sinal
+# Plota o sinal
+visualizer.plot_signal(start_time=0, duration=10)
 
-## 🔍 Detecção Inteligente
+# Plota frequência cardíaca
+visualizer.plot_heart_rate()
 
-O conversor analisa automaticamente:
+# Gera resumo completo
+visualizer.plot_summary("plots")
+```
 
-1. **Anotações**:
-   - Detecta padrões nos últimos 1024 bytes
-   - Extrai posição e tipo de cada anotação
-   - Gera arquivo `.atr` quando encontradas
+## Visualizações Geradas
 
-2. **Arritmias**:
-   - Procura por códigos específicos no cabeçalho
-   - Identifica tipo e severidade
-   - Gera arquivo `.ari` quando encontradas
+1. **Sinal Temporal**
+   - Gráfico do sinal no domínio do tempo
+   - Espectro de frequência
+   - Escalas apropriadas para Holter/ECG
 
-3. **Qualidade**:
-   - Verifica flags de qualidade no cabeçalho
-   - Avalia integridade dos dados
-   - Gera arquivo `.qrs` com informações de qualidade
+2. **Frequência Cardíaca**
+   - Variação da FC ao longo do tempo
+   - Suavização para melhor visualização
+   - Detecção de picos R
 
-## 📈 Análise de Dados
+3. **Distribuição da FC**
+   - Histograma da frequência cardíaca
+   - Análise estatística básica
 
-O conversor extrai e processa:
+## Contribuição
 
-1. **Metadados**:
-   - Taxa de amostragem
-   - Timestamp inicial
-   - Duração do registro
-   - Número de amostras
-   - Tamanho do arquivo
+Contribuições são bem-vindas! Por favor, abra uma issue ou envie um pull request.
 
-2. **Estatísticas**:
-   - Número de anotações
-   - Número de arritmias
-   - Qualidade do sinal
-   - Presença de artefatos
+## Licença
 
-## 🤝 Contribuição
-
-Contribuições são bem-vindas! Por favor, siga estas etapas:
-
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
-## 📝 Licença
-
-Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-## 📧 Contato
-
-Para dúvidas ou sugestões, entre em contato através do email: seu-email@exemplo.com 
+Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes. 
