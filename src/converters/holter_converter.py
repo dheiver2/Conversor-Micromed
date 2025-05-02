@@ -232,27 +232,53 @@ class HolterConverter:
                 # Garante que os dados estão no formato correto
                 signal = self.ecg_data.reshape(-1, 1)
                 
+                # Gera o arquivo WFDB
                 wfdb.wrsamp(
                     record_name=base_name,
                     fs=self.sample_rate,
                     units=['mV'],
                     sig_name=['ECG'],
                     p_signal=signal,
-                    write_dir=output_dir
+                    write_dir=output_dir,
+                    comments=['Converted from Holter BIN file']
                 )
                 
             if FileType.ANNOTATION in self.required_files and self.annotations:
                 print("Gerando arquivo .atr...")
-                self._generate_annotation_file(base_name, output_dir)
+                # Converte as anotações para o formato WFDB
+                sample = np.array([a[0] for a in self.annotations])
+                symbol = [a[1] for a in self.annotations]
+                
+                # Gera o arquivo de anotação
+                wfdb.wrann(
+                    record_name=base_name,
+                    extension='atr',
+                    sample=sample,
+                    symbol=symbol,
+                    fs=self.sample_rate,
+                    write_dir=output_dir
+                )
                 
             if FileType.ARRHYTHMIA in self.required_files and self.arrhythmias:
                 print("Gerando arquivo .ari...")
-                self._generate_arrhythmia_file(base_name, output_dir)
-                
+                with open(os.path.join(output_dir, f"{base_name}.ari"), 'w') as f:
+                    for arr in self.arrhythmias:
+                        f.write(f"{arr['start']} {arr['type']} {arr['severity']}\n")
+                        
             if FileType.QUALITY in self.required_files:
                 print("Gerando arquivo .qrs...")
-                self._generate_quality_file(base_name, output_dir)
-                
+                with open(os.path.join(output_dir, f"{base_name}.qrs"), 'w') as f:
+                    f.write(f"Sample Rate: {self.sample_rate}\n")
+                    f.write(f"Start Time: {self.start_time}\n")
+                    f.write(f"File Size: {self.file_metadata['file_size']}\n")
+                    f.write(f"Number of Samples: {self.file_metadata['num_samples']}\n")
+                    f.write(f"Duration (seconds): {self.file_metadata['duration_seconds']:.2f}\n")
+                    f.write(f"Number of Annotations: {self.file_metadata['num_annotations']}\n")
+                    f.write(f"Number of Arrhythmias: {self.file_metadata['num_arrhythmias']}\n")
+                    f.write(f"Has Annotations: {self.file_metadata['has_annotations']}\n")
+                    f.write(f"Has Arrhythmia: {self.file_metadata['has_arrhythmia']}\n")
+                    f.write(f"Has Quality Info: {self.file_metadata['has_quality']}\n")
+                    
             print(f"\nConversão concluída. Arquivos gerados em {output_dir}:")
             for file_type in self.required_files:
                 print(f"- {file_type.name}")
@@ -260,44 +286,6 @@ class HolterConverter:
         except Exception as e:
             print(f"Erro durante a conversão: {e}")
             raise
-            
-    def _generate_annotation_file(self, base_name: str, output_dir: str) -> None:
-        """Gera arquivo .atr"""
-        if self.annotations:
-            # Converte as anotações para o formato WFDB
-            sample = np.array([a[0] for a in self.annotations])
-            symbol = [a[1] for a in self.annotations]
-            
-            # Gera o arquivo de anotação
-            wfdb.wrann(
-                record_name=base_name,
-                extension='atr',
-                sample=sample,
-                symbol=symbol,
-                fs=self.sample_rate,
-                write_dir=output_dir
-            )
-            
-    def _generate_arrhythmia_file(self, base_name: str, output_dir: str) -> None:
-        """Gera arquivo .ari"""
-        if self.arrhythmias:
-            with open(os.path.join(output_dir, f"{base_name}.ari"), 'w') as f:
-                for arr in self.arrhythmias:
-                    f.write(f"{arr['start']} {arr['type']} {arr['severity']}\n")
-                    
-    def _generate_quality_file(self, base_name: str, output_dir: str) -> None:
-        """Gera arquivo .qrs"""
-        with open(os.path.join(output_dir, f"{base_name}.qrs"), 'w') as f:
-            f.write(f"Sample Rate: {self.sample_rate}\n")
-            f.write(f"Start Time: {self.start_time}\n")
-            f.write(f"File Size: {self.file_metadata['file_size']}\n")
-            f.write(f"Number of Samples: {self.file_metadata['num_samples']}\n")
-            f.write(f"Duration (seconds): {self.file_metadata['duration_seconds']:.2f}\n")
-            f.write(f"Number of Annotations: {self.file_metadata['num_annotations']}\n")
-            f.write(f"Number of Arrhythmias: {self.file_metadata['num_arrhythmias']}\n")
-            f.write(f"Has Annotations: {self.file_metadata['has_annotations']}\n")
-            f.write(f"Has Arrhythmia: {self.file_metadata['has_arrhythmia']}\n")
-            f.write(f"Has Quality Info: {self.file_metadata['has_quality']}\n")
             
     def get_metadata(self) -> Dict:
         """Retorna metadados do arquivo"""
